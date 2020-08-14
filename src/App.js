@@ -6,8 +6,8 @@ import * as Auth0 from 'auth0-web';
 import io from 'socket.io-client';
 
 Auth0.configure({
-  domain: 'dev-qxwc3k-g.us.auth0.com',
-  clientID: 'JVHaH8HfmC22egdoXcYbNBwsgBKu4p8p',
+  domain: 'digituz-corp.auth0.com',
+  clientID: 'D41G9fJIvLrUJivCJpAkxOA74fpxn2Rg',
   redirectUri: 'http://localhost:3000/',
   responseType: 'token id_token',
   scope: 'openid profile manage:points',
@@ -15,10 +15,11 @@ Auth0.configure({
 });
 
 class App extends Component {
-
   constructor(props) {
     super(props);
     this.shoot = this.shoot.bind(this);
+    this.socket = null;
+    this.currentPlayer = null;
   }
 
   componentDidMount() {
@@ -29,45 +30,32 @@ class App extends Component {
     Auth0.subscribe((auth) => {
       if (!auth) return;
 
-      const playerProfile = Auth0.getProfile();
-      const currentPlayer = {
-        id: playerProfile.sub,
+      self.playerProfile = Auth0.getProfile();
+      self.currentPlayer = {
+        id: self.playerProfile.sub,
         maxScore: 0,
-        name: playerProfile.name,
-        picture: playerProfile.picture,
+        name: self.playerProfile.name,
+        picture: self.playerProfile.picture,
       };
 
-      this.props.loggedIn(currentPlayer);
+      this.props.loggedIn(self.currentPlayer);
 
-      const socket = io('http://localhost:3001', {
+      self.socket = io('http://localhost:3001', {
         query: `token=${Auth0.getAccessToken()}`,
       });
 
-      let emitted = false;
-      socket.on('players', (players) => {
+      self.socket.on('players', (players) => {
         this.props.leaderboardLoaded(players);
-
-        if (emitted) return;
-        socket.emit('new-max-score', {
-          id: playerProfile.sub,
-          maxScore: 120,
-          name: playerProfile.name,
-          picture: playerProfile.picture,
+        players.forEach((player) => {
+          if (player.id === self.currentPlayer.id) {
+            self.currentPlayer.maxScore = player.maxScore;
+          }
         });
-        emitted = true;
-        setTimeout(() => {
-          socket.emit('new-max-score', {
-            id: playerProfile.sub,
-            maxScore: 222,
-            name: playerProfile.name,
-            picture: playerProfile.picture,
-          });
-        }, 5000);
       });
     });
 
     setInterval(() => {
-        self.props.moveObjects(self.canvasMousePosition);
+      self.props.moveObjects(self.canvasMousePosition);
     }, 10);
 
     window.onresize = () => {
@@ -76,6 +64,17 @@ class App extends Component {
       cnv.style.height = `${window.innerHeight}px`;
     };
     window.onresize();
+  }
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    if (!nextProps.gameState.started && this.props.gameState.started) {
+      if (!this.currentPlayer) return;
+      if (this.currentPlayer.maxScore < this.props.gameState.kills) {
+        this.socket.emit('new-max-score', {
+          ...this.currentPlayer,
+          maxScore: this.props.gameState.kills,
+        });
+      }
+    }
   }
 
   trackMouse(event) {
@@ -88,7 +87,7 @@ class App extends Component {
 
   render() {
     return (
-          <Canvas
+      <Canvas
         angle={this.props.angle}
         currentPlayer={this.props.currentPlayer}
         gameState={this.props.gameState}
@@ -107,17 +106,16 @@ App.propTypes = {
     started: PropTypes.bool.isRequired,
     kills: PropTypes.number.isRequired,
     lives: PropTypes.number.isRequired,
-    flyingObjects: PropTypes.arrayOf(PropTypes.shape({
-      position: PropTypes.shape({
-        x: PropTypes.number.isRequired,
-        y: PropTypes.number.isRequired
-      }).isRequired,
-      id: PropTypes.number.isRequired,
-    })).isRequired,
-  }).isRequired,
+  }),
+  flyingObjects: PropTypes.arrayOf(PropTypes.shape({
+    position: PropTypes.shape({
+      x: PropTypes.number.isRequired,
+      y: PropTypes.number.isRequired
+    }).isRequired,
+    id: PropTypes.number.isRequired,
+  })),
   moveObjects: PropTypes.func.isRequired,
   startGame: PropTypes.func.isRequired,
-
   currentPlayer: PropTypes.shape({
     id: PropTypes.string.isRequired,
     maxScore: PropTypes.number.isRequired,

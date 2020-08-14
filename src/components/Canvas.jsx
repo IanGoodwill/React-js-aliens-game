@@ -1,4 +1,3 @@
-
 import React from 'react';
 import PropTypes from 'prop-types';
 import Sky from './Sky';
@@ -59,7 +58,6 @@ const Canvas = (props) => {
         <StartGame onClick={() => props.startGame()} />
         <Title />
         <Leaderboard currentPlayer={props.currentPlayer} authenticate={signIn} leaderboard={props.players} />
-        
       </g>
       }
 
@@ -76,40 +74,26 @@ const Canvas = (props) => {
 };
 
 Canvas.propTypes = {
-  angle: PropTypes.number.isRequired,
-
+  angle: PropTypes.number,
   gameState: PropTypes.shape({
     started: PropTypes.bool.isRequired,
     kills: PropTypes.number.isRequired,
     lives: PropTypes.number.isRequired,
-  }).isRequired,
-
-  flyingObjects: PropTypes.arrayOf(PropTypes.shape({
-    position: PropTypes.shape({
-      x: PropTypes.number.isRequired,
-      y: PropTypes.number.isRequired
-    }).isRequired,
-    id: PropTypes.number.isRequired,
-  })).isRequired,
-
+  }),
   trackMouse: PropTypes.func.isRequired,
-
   startGame: PropTypes.func.isRequired,
-
   currentPlayer: PropTypes.shape({
     id: PropTypes.string.isRequired,
     maxScore: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
     picture: PropTypes.string.isRequired,
   }),
-
   players: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.string.isRequired,
     maxScore: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
     picture: PropTypes.string.isRequired,
   })),
-
   shoot: PropTypes.func.isRequired,
 };
 

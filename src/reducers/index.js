@@ -1,8 +1,7 @@
 import {
   LEADERBOARD_LOADED, LOGGED_IN,
-  MOVE_OBJECTS, START_GAME
+  MOVE_OBJECTS, SHOOT, START_GAME
 } from '../actions';
-
 import moveObjects from './moveObjects';
 import startGame from './startGame';
 import shoot from './shoot';
@@ -25,16 +24,6 @@ const initialState = {
 
 function reducer(state = initialState, action) {
   switch (action.type) {
-    // other case statements
-    case SHOOT:
-      return shoot(state, action);
-    // ... default statement
-  }
-}
-
-function reducer(state = initialState, action) {
-  switch (action.type) {
-
     case LEADERBOARD_LOADED:
       return {
         ...state,
@@ -45,11 +34,12 @@ function reducer(state = initialState, action) {
         ...state,
         currentPlayer: action.player,
       };
-
     case MOVE_OBJECTS:
       return moveObjects(state, action);
     case START_GAME:
       return startGame(state, initialGameState);
+    case SHOOT:
+      return shoot(state, action);
     default:
       return state;
   }

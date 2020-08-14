@@ -8,6 +8,11 @@ function moveObjects(state, action) {
 
   let cannonBalls = moveBalls(state.gameState.cannonBalls);
 
+  const mousePosition = action.mousePosition || {
+    x: 0,
+    y: 0,
+  };
+
   const newState = createFlyingObjects(state);
 
   const now = (new Date()).getTime();
